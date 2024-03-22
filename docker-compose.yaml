@@ -1,0 +1,76 @@
+version: "3"
+services:
+  
+  nodeapp:
+    build:
+      context: ./node
+    ports:
+      - "50001:50001"  # Dapr instances communicate over gRPC so we need to expose the gRPC port
+    depends_on:
+      - redis
+      - placement
+    networks:
+      - daprnet
+
+  nodeapp-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "nodeapp",
+      "--app-port", "3000",
+      "--placement-host-address", "placement:50006",  # Dapr's placement service can be reach via the docker DNS entry
+      "--dapr-grpc-port", "50001",
+      "--components-path", "/components"
+    ]
+    depends_on:
+      - nodeapp
+    volumes:
+      - "./components:/components"   # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    network_mode: "service:nodeapp"
+  
+  pythonapp:
+    build:
+      context: ./python
+    depends_on:
+      - redis
+      - placement
+    networks:
+      - daprnet
+
+  pythonapp-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "pythonapp",
+      "--placement-host-address", "placement:50006",  # Dapr's placement service can be reach via the docker DNS entry
+      "--components-path", "/components"
+    ]
+    volumes:
+      - "./components:/components"   # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    depends_on:
+      - pythonapp
+    network_mode: "service:pythonapp"
+
+  placement:
+    image: "daprio/dapr"
+    command: ["./placement", "-port", "50006"]
+    ports:
+      - "50006:50006"  # Dapr's placement service can be reach via the docker DNS entry
+    networks:
+      - daprnet
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6380:6379"
+    networks:
+      - daprnet
+
+  # curl:
+  #   image: yauritux/busybox-curl
+  #   networks:
+  #     - daprnet
+  #   command: ["tail", "-f", "/dev/null"]
+    
+networks:
+  daprnet: 
