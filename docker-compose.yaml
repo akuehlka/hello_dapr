@@ -74,7 +74,7 @@ services:
 
   neo4j:
     image: neo4j:bullseye
-    container_name: "neo4j"
+    # container_name: "neo4j"
     volumes:
       - ./data/neo4j/data:/data
       - ./data/neo4j/var:/var/lib/neo4j/import

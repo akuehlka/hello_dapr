@@ -16,6 +16,7 @@ while True:
     message = {"data": {"orderId": n}}
 
     try:
+        print("Sending message: " + str(message))
         response = requests.post(dapr_url, json=message)
     except Exception as e:
         print(e)

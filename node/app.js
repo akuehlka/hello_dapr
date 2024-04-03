@@ -14,6 +14,10 @@ const daprPort = process.env.DAPR_HTTP_PORT || 3500;
 const stateStoreName = `statestore`;
 const stateUrl = `http://localhost:${daprPort}/v1.0/state/${stateStoreName}`;
 const port = 3000;
+const NEO4J_URI = process.env.NEO4J_URI || "http://neo4j:7474/db/neo4j/tx/commit";
+const NEO4J_AUTH = ["neo4j", "1234"];
+
+//TODO: Write a function that sends the new order to Neo4j via HTTP
 
 app.get('/order', (_req, res) => {
     fetch(`${stateUrl}/order`)
@@ -53,6 +57,31 @@ app.post('/neworder', (req, res) => {
         }
 
         console.log("Successfully persisted state.");
+
+        // // ** Persist the order in Neo4j **
+        // fetch(NEO4J_URI, {
+        //     method: "POST",
+        //     body: JSON.stringify({
+        //         "statements": [
+        //             {
+        //                 "statement": "MERGE (o:Order {orderId: $orderId})",
+        //                 "parameters": {
+        //                     "orderId": orderId
+        //                 }
+        //             }
+        //         ]
+        //     }),
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     }, 
+        //     auth: NEO4J_AUTH
+        // }).then((response) => {
+        //     if (!response.ok) {
+        //         throw "Failed to persist in Neo4j.";
+        //     }
+        //     console.log("Successfully persisted in Neo4j.");
+        // })
+        // // ** Persist the order in Neo4j **
         res.status(200).send();
     }).catch((error) => {
         console.log(error);
